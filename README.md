@@ -24,7 +24,7 @@ StartName   : LocalSystem
 PathName    : C:\WINDOWS\system32\svchost.exe -k netsvcs -p
 ```
 
-Not all services running as LocalSystem will work, you may have to experiment to find one that is not restricted (e.g.):<br />
+Not all services running as LocalSystem will work.  You may have to experiment to find one that is not restricted and holds the correct token privileges (e.g.):<br />
 ```
 Name        : GoogleChromeElevationService
 DisplayName : Google Chrome Elevation Service
